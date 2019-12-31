@@ -1,0 +1,24 @@
+name: ci
+
+on:
+  push:
+    paths-ignore:
+      - README.md
+      - .gitignore
+  pull_request:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-node@v1
+        with:
+            node-version: 12.x
+      - run: npm i
+      - run: npm run build
+      - name: publish next
+        if: github.event_name == 'push' && github.ref == 'refs/heads/master'
+        run: npm run publish --tag next --access public
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
