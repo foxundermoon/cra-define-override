@@ -20,6 +20,10 @@ jobs:
         run: |
           sed -n 's/^version:\s\(.*\)$/\1/p' ${{ env.manifest_file }} \
           | xargs -i echo "::set-output name=version::{}"
+      - uses: actions/setup-node@v1
+        with:
+            node-version: 12.x
+            registry-url: https://registry.npmjs.org/
       - name: get changelog
         id: changelog 
         run: |
@@ -44,3 +48,8 @@ jobs:
           prerelease: false
           # An optional tag for the release. If this is omitted the git ref will be used (if it is a tag).
           token: ${{ secrets.GITHUB_TOKEN }}
+      - name: release to npm
+        if: env.VERSION != env.LATEST_VERSION
+        run: npm publish --tag latest --access public
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
