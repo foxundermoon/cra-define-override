@@ -1,0 +1,59 @@
+name: release
+
+on:
+  push:
+    tags:
+      - 'v*'
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: check version
+        run: |
+          latestVersion=$(npm show cra-define-override --json | jq '."dist-tags".latest' -r)
+          nextVersion=$(npm show cra-define-override --json | jq '."dist-tags".next' -r)
+          version=$(cat package.json | jq '.version' -r)
+
+          echo "set-env::name=VERSION::$version"
+          echo "set-env::name=NEXT_VERSION::$nextVersion"
+          echo "set-env::name=LATEST_VERSION::$latestVersion"
+
+      - uses: actions/setup-node@v1
+        with:
+            node-version: 12.x
+            registry-url: https://registry.npmjs.org/
+      - name: get changelog
+        id: changelog 
+        run: |
+          changelog=$(echo "${{ steps.version.outputs.version}}" \
+          | xargs -i sed -n '/^#\s\'"{}"'.*$/,/^#\s\([^[:space:]]\+\).*$/{//!p}' ${{ env.changelog_file }})
+          echo $changelog
+          changelog="${changelog//'%'/'%25'}"
+          changelog="${changelog//$'\n'/'%0A'}"
+          changelog="${changelog//$'\r'/'%0D'}"
+          echo "::set-output name=changelog::$changelog" 
+      - name: echo version and changelog
+        run: |
+          echo "${{ steps.version.outputs.version}}"
+          echo "${{ steps.changelog.outputs.changelog }}"
+      - name: Create Release
+        if: env.VERSION != env.LATEST_VERSION
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # This token is provided by Actions, you do not need to create your own token
+        with:
+          tag_name: ${{ github.ref }}
+          release_name: Release ${{ github.ref }}
+          body: |
+            Changes in this Release
+            - First Change
+            - Second Change
+          draft: false
+          prerelease: false
+      - name: release to npm
+        if: env.VERSION != env.LATEST_VERSION
+        run: npm publish --tag latest --access public
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
