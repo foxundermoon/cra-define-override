@@ -1,0 +1,36 @@
+{
+  "name": "cra-define-override",
+  "version": "1.0.0",
+  "description": "override customize-cra DefinePlugin ",
+  "main": "dist/index.cjs.js",
+  "module": "dist/index.esm.js",
+  "scripts": {
+    "build": "npm run clean && rollup -c",
+    "clean": "rimraf dist",
+    "test": "jest",
+    "prepack": "npm run build"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/foxundermoon/cra-define-override.git"
+  },
+  "keywords": [
+    "customize-cra",
+    "DefinePlugin",
+    "override"
+  ],
+  "author": "foxundermoon",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/foxundermoon/cra-define-override/issues"
+  },
+  "homepage": "https://github.com/foxundermoon/cra-define-override#readme",
+  "devDependencies": {
+    "@rollup/plugin-typescript": "^2.0.1",
+    "@types/webpack": "^4.41.1",
+    "rimraf": "^3.0.0",
+    "rollup": "^1.27.14",
+    "tslib": "^1.10.0",
+    "typescript": "^3.7.4"
+  }
+}
