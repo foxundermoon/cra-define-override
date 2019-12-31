@@ -1,25 +1,24 @@
-name: autorelease
+name: release
+
 on:
-  pull_request:
-    types: [closed]
-    branches:
-      - master
+  push:
+    tags:
+      - 'v*'
 jobs:
   build:
-    if: github.event.pull_request.merged == true && contains(toJSON(github.event.pull_request.labels.*.name), '"autorelease"')
     runs-on: ubuntu-latest
-    env:
-      manifest_file: 'manifest.yml'
-      changelog_file: 'CHANGELOG.md'
     steps:
       - uses: actions/checkout@v2
-        with:
-          ref: master
-      - name: get version
-        id: version
+      - name: check version
         run: |
-          sed -n 's/^version:\s\(.*\)$/\1/p' ${{ env.manifest_file }} \
-          | xargs -i echo "::set-output name=version::{}"
+          latestVersion=$(npm show cra-define-override --json | jq '."dist-tags".latest' -r)
+          nextVersion=$(npm show cra-define-override --json | jq '."dist-tags".next' -r)
+          version=$(cat package.json | jq '.version' -r)
+
+          echo "set-env::name=VERSION::$version"
+          echo "set-env::name=NEXT_VERSION::$nextVersion"
+          echo "set-env::name=LATEST_VERSION::$latestVersion"
+
       - uses: actions/setup-node@v1
         with:
             node-version: 12.x
@@ -39,15 +38,20 @@ jobs:
           echo "${{ steps.version.outputs.version}}"
           echo "${{ steps.changelog.outputs.changelog }}"
       - name: Create Release
-        uses: ncipollo/release-action@v1.4.0
+        if: env.VERSION != env.LATEST_VERSION
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # This token is provided by Actions, you do not need to create your own token
         with:
-          name: ${{ steps.version.outputs.version }}
-          tag: v${{ steps.version.outputs.version }}
-          body: ${{ steps.changelog.outputs.changelog}}
+          tag_name: ${{ github.ref }}
+          release_name: Release ${{ github.ref }}
+          body: |
+            Changes in this Release
+            - First Change
+            - Second Change
           draft: false
           prerelease: false
-          # An optional tag for the release. If this is omitted the git ref will be used (if it is a tag).
-          token: ${{ secrets.GITHUB_TOKEN }}
       - name: release to npm
         if: env.VERSION != env.LATEST_VERSION
         run: npm publish --tag latest --access public
