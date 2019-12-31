@@ -22,7 +22,7 @@ export const overrideProcessEnv = (value: { [key: string]: string }) => (
   return config;
 };
 
-const getEnvToDefine = (envNames: Array<string>) =>
+export const getEnvToDefine = (envNames: Array<string>) =>
   envNames.reduce((a, c) => {
     a[c] = JSON.stringify(process.env[c]);
     return a;
