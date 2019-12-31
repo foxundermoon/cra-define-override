@@ -12,6 +12,15 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
+      - name: check version
+        run: |
+          latestVersion=$(npm show cra-define-override --json | jq '."dist-tags".latest' -r)
+          nextVersion=$(npm show cra-define-override --json | jq '."dist-tags".next' -r)
+          version=$(cat package.json | jq '.version' -r)
+
+          echo "set-env::name=VERSION::$version"
+          echo "set-env::name=NEXT_VERSION::$nextVersion"
+          echo "set-env::name=LATEST_VERSION::$latestVersion"
       - uses: actions/setup-node@v1
         with:
             node-version: 12.x
