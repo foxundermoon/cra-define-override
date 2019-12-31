@@ -19,6 +19,6 @@ jobs:
       - run: npm run build
       - name: publish next
         if: github.event_name == 'push' && github.ref == 'refs/heads/master'
-        run: npm run publish --tag next --access public
+        run: npm publish --tag next --access public
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
